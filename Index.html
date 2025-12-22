@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Panel Produk</title>
+<style>
+body { font-family: Arial; padding: 20px }
+input, button { padding: 8px; margin: 5px }
+table { border-collapse: collapse; width: 100% }
+td, th { border: 1px solid #ccc; padding: 8px }
+</style>
+</head>
+<body>
+
+<h2>Login Admin</h2>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<hr>
+
+<div id="panel" style="display:none">
+
+<h2>Tambah Produk</h2>
+<input id="nama" placeholder="Nama Produk">
+<input id="harga" placeholder="Harga">
+<button onclick="tambah()">Tambah</button>
+
+<h2>Daftar Produk</h2>
+<table>
+<thead>
+<tr><th>Nama</th><th>Harga</th><th>Aksi</th></tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+
+</div>
+
+<script>
+const API = "https://panel.zulk20192.workers.dev";
+let token = "";
+
+function login() {
+  fetch(API + "/login", {
+    method: "POST",
+    body: JSON.stringify({
+      user: user.value,
+      pass: pass.value
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    token = d.token;
+    panel.style.display = "block";
+    load();
+  });
+}
+
+function tambah() {
+  fetch(API + "/produk", {
+    method: "POST",
+    headers: { Authorization: token },
+    body: JSON.stringify({
+      nama: nama.value,
+      harga: harga.value
+    })
+  }).then(load);
+}
+
+function load() {
+  fetch(API + "/produk", {
+    headers: { Authorization: token }
+  })
+  .then(r => r.json())
+  .then(data => {
+    list.innerHTML = "";
+    data.forEach(p => {
+      list.innerHTML += `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.harga}</td>
+          <td>
+            <button onclick="hapus('${p.id}')">Hapus</button>
+          </td>
+        </tr>
+      `;
+    });
+  });
+}
+
+function hapus(id) {
+  fetch(API + "/produk/" + id, {
+    method: "DELETE",
+    headers: { Authorization: token }
+  }).then(load);
+}
+</script>
+
+</body>
+</html>
